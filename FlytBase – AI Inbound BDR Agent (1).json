@@ -1,0 +1,1494 @@
+{
+  "name": "FlytBase – AI Inbound BDR Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9086a195-47d1-4807-87de-0ac3ad753943",
+      "name": "00 - INPUT - Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "426c8da6-d0ad-4728-a32a-fcfc1dd3ffb4",
+              "name": "raw_email",
+              "value": "From: Rodrigo Castillo (r.castillo@sqm.cl) Title: Head of Operations, Northern Operations Division Company: Sociedad Quimica y Minera de Chile (SQM), Chile Subject: Autonomous inspection for our Atacama lithium sites  Context: Looking for drone-based inspection for 3 large-scale, 24/7 lithium extraction sites in the Atacama Desert. Contracted crews are expensive and hazardous. Referred by Anglo American. Internal budget conversation scheduled for Q3.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "120f5a99-b4e2-4923-afac-9178b2b2dc75",
+      "name": "00 - INPUT - Raw Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=INPUT:\n{{ $json.raw_email }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the lead parsing component of an enterprise BDR automation system for FlytBase.\nYour job is ONLY to extract information explicitly present in the supplied inbound email.\nDo not research. Do not infer. Do not add information. Do not correct information.\n\nExtract these fields: full_name, email, job_title, company, country, subject, business_context, stated_problem, use_case, number_of_sites, operating_hours, pain_points, referral, stated_timing, raw_email.\n\nRules:\n- If a field is not explicitly available, return null.\n- Preserve the meaning of the original email.\n- Do not convert assumptions into facts.\n- raw_email must be the full original email text.\n- Return JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "b0870ee5-30a3-4770-aae8-e5518dd09910",
+      "name": "01 - Lead Parser",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "fbc32032-30a6-41c2-b656-c5d5773427fa",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"full_name\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"email\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"job_title\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"company\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"country\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"subject\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"business_context\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"stated_problem\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"use_case\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"number_of_sites\": {\n      \"type\": [\n        \"number\",\n        \"null\"\n      ]\n    },\n    \"operating_hours\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"pain_points\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"referral\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"stated_timing\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"raw_email\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"full_name\",\n    \"email\",\n    \"job_title\",\n    \"company\",\n    \"country\",\n    \"subject\",\n    \"business_context\",\n    \"stated_problem\",\n    \"use_case\",\n    \"number_of_sites\",\n    \"operating_hours\",\n    \"pain_points\",\n    \"referral\",\n    \"stated_timing\",\n    \"raw_email\"\n  ]\n}"
+      },
+      "id": "21061a32-8328-490a-accc-8e1a50d30a01",
+      "name": "01A - Lead Parser Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input lead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output, null, 2) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the qualification engine for FlytBase's inbound BDR system.\n\nApply MEDDIC:\nM = Metrics\nE = Economic Buyer\nD = Decision Criteria\nD = Decision Process\nI = Identify Pain\nC = Champion\n\nYour job is to separate what is known from what is unknown.\n\nNEVER:\n- assume the economic buyer\n- assume budget ownership\n- invent ROI\n- invent current inspection costs\n- invent procurement steps\n- call someone a champion without evidence\n\nA referral is evidence of a referral signal, but it is NOT proof that the sender is a champion.\nA mentioned budget conversation is timing information, not proof that budget has been approved.\n\nSCORING (total 100):\nUse-case fit: 20\nPain severity: 15\nEnterprise potential: 15\nTiming: 10\nBuyer seniority: 10\nReferral/intent: 10\nDecision clarity: 10\nChampion/economic buyer: 10\n\nPriority: P1 if score >= 70, P2 if 50-69, P3 otherwise.\n\nReturn: framework, score, priority, score_breakdown, known_information, unknown_information, evidence, discovery_questions, reasoning. Return JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "e0932f56-510e-4daf-8ce3-1d0662deb183",
+      "name": "02 - MEDDIC Qualification",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"framework\": \"MEDDIC\",\n  \"score\": 72,\n  \"priority\": \"P1\",\n  \"score_breakdown\": {\n    \"use_case_fit\": 18,\n    \"pain_severity\": 12,\n    \"enterprise_potential\": 13,\n    \"timing\": 7,\n    \"buyer_seniority\": 8,\n    \"referral_intent\": 8,\n    \"decision_clarity\": 3,\n    \"champion_economic_buyer\": 3\n  },\n  \"known_information\": {\n    \"metrics\": [\n      \"3 sites operating 24/7\"\n    ],\n    \"economic_buyer\": \"UNKNOWN - budget owner not identified\",\n    \"decision_criteria\": [\n      \"Drone-based inspection requested\"\n    ],\n    \"decision_process\": [\n      \"Internal budget conversation mentioned for Q3\"\n    ],\n    \"pain\": [\n      \"Contracted crews are expensive and hazardous\"\n    ],\n    \"champion\": \"UNVERIFIED - referral signal only\"\n  },\n  \"unknown_information\": [\n    \"Who owns and approves the budget\"\n  ],\n  \"evidence\": [\n    \"Quote or fact from the email that supports a score\"\n  ],\n  \"discovery_questions\": [\n    \"Who else is involved in approving an inspection pilot?\"\n  ],\n  \"reasoning\": \"Why the score and priority were assigned\"\n}"
+      },
+      "id": "7893aef0-1800-4357-8c0e-a98e3dd5b5ef",
+      "name": "02A - MEDDIC Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('01 - Lead Parser').first().json.output || {};\nconst company = String(lead.company || '').trim();\nconst m = company.match(/\\(([^)]+)\\)/);\nconst shortName = m ? m[1].trim() : company;\nconst fullName = company.replace(/\\s*\\([^)]*\\)/g, '').trim() || company;\nconst country = lead.country || '';\nconst q = function (s) { return '\"' + s + '\"'; };\nreturn [{\n  json: {\n    company: company,\n    research_queries: [\n      q(fullName) + ' annual report',\n      q(shortName) + ' investor relations capex',\n      q(shortName) + ' ' + country + ' operations sites',\n      q(shortName) + ' Industry 4.0 drone',\n      q(shortName) + ' autonomous inspection',\n      q(shortName) + ' technology strategy digital transformation',\n      q(shortName) + ' recent strategic announcements',\n      q(shortName) + ' management operations ' + country\n    ]\n  }\n}];"
+      },
+      "id": "1042728c-89a2-4557-ab1f-94bc4e437d57",
+      "name": "03 - Generate Research Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "research_queries",
+        "options": {}
+      },
+      "id": "8afa04da-9386-4b31-b9c0-7b6308fa806a",
+      "name": "04 - Split Research Queries",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.research_queries }}"
+            },
+            {
+              "name": "num",
+              "value": "5"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            },
+            {
+              "name": "output",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "id": "9717074c-5c7e-44a6-b6fc-cc054682046e",
+      "name": "05 - Search SQM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        0
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "sbIfqjFER25q2Y7b",
+          "name": "SerpAPI account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst errors = [];\nfor (const item of $input.all()) {\n  const r = item.json || {};\n  if (r.error) {\n    errors.push(String((r.error && r.error.message) || r.error));\n    continue;\n  }\n  const q = (r.search_parameters && r.search_parameters.q) || null;\n  const organic = (r.organic_results || []).slice(0, 5);\n  for (const o of organic) {\n    results.push({\n      query: q,\n      title: o.title || null,\n      url: o.link || null,\n      snippet: o.snippet || null,\n      source: o.source || null,\n      date: o.date || null\n    });\n  }\n}\nconst seen = {};\nconst deduped = results.filter(function (x) {\n  if (!x.url || seen[x.url]) return false;\n  seen[x.url] = true;\n  return true;\n});\nreturn [{\n  json: {\n    search_results: deduped,\n    result_count: deduped.length,\n    search_errors: errors,\n    research_status: deduped.length ? 'available' : 'NOT PUBLICLY VERIFIED - no search results returned'\n  }\n}];"
+      },
+      "id": "8f57e77b-43c0-4936-979c-363ee0f8f538",
+      "name": "06 - Normalize SQM Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Research target company: {{ $('01 - Lead Parser').first().json.output.company }}\n\nLead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output) }}\n\nQualification:\n{{ JSON.stringify($('02 - MEDDIC Qualification').first().json.output) }}\n\nResearch status: {{ $json.research_status }}\nSearch errors: {{ JSON.stringify($json.search_errors) }}\n\nSearch evidence:\n{{ JSON.stringify($json.search_results) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the deep account research analyst for FlytBase.\n\nProduce:\n1. organizational_context\n2. relevant_operations\n3. budget_signals\n4. technology_investment_signals\n5. recent_strategic_announcements\n6. operational_priorities\n7. relevant_stakeholders\n8. implications_for_flytbase\n9. sources\n\nEach section is a list of statements. Each statement has: statement, type (fact or inference), source_url.\n\nSOURCE RULES:\n- Use ONLY the supplied search evidence. Never use outside knowledge for facts.\n- Every material factual claim must contain a source URL taken from the search evidence.\n- Prefer official company / investor sources.\n- Distinguish fact from inference.\n- Never treat company-wide capex as this project's approved budget.\n- Never invent a stakeholder's authority.\n- If something cannot be verified from the evidence, say NOT PUBLICLY VERIFIED in the statement. source_url must NEVER be empty: use 'Inbound email (lead-provided)' when the information comes from the lead's own email, otherwise 'NOT PUBLICLY VERIFIED - no public source found in search results'.\n- If the search evidence is empty, mark every section NOT PUBLICLY VERIFIED.\n\nReturn JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "8d96a56d-da76-4557-a59d-9ea6449254cb",
+      "name": "07 - SQM Research Synthesizer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2048,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "33d4e025-fa73-4131-94e0-6adee469e523",
+      "name": "OpenAI Model - Research",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"organizational_context\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"relevant_operations\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"budget_signals\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"technology_investment_signals\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"recent_strategic_announcements\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"operational_priorities\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"inference\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"relevant_stakeholders\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"fact\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"implications_for_flytbase\": [\n    {\n      \"statement\": \"text\",\n      \"type\": \"inference\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"sources\": [\n    {\n      \"claim\": \"text\",\n      \"source_title\": \"text\",\n      \"source_url\": \"https://example.org\",\n      \"date\": \"2025-01-01\",\n      \"confidence\": \"high\"\n    }\n  ]\n}"
+      },
+      "id": "4bcc9661-98ce-4042-8ca4-32efb14b49ce",
+      "name": "07A - Research Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2192,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('01 - Lead Parser').first().json.output || {};\nconst company = String(lead.company || '').trim();\nconst m = company.match(/\\(([^)]+)\\)/);\nconst shortName = m ? m[1].trim() : company;\nconst referral = lead.referral ? String(lead.referral).trim() : '';\nconst country = lead.country || '';\nconst base = 'site:flytbase.com ';\nconst queries = [\n  base + '\"' + shortName + '\"',\n  base + 'case study mining autonomous inspection',\n  base + country + ' mining drone',\n  base + 'lithium OR mining inspection drone dock',\n  base + 'autonomous mining operations case study'\n];\nif (referral) { queries.splice(1, 0, base + '\"' + referral + '\"'); }\nreturn [{ json: { material_queries: queries } }];"
+      },
+      "id": "bda078dd-fca7-43c1-8451-a02976a4bce4",
+      "name": "08 - Generate FlytBase Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "material_queries",
+        "options": {}
+      },
+      "id": "dd2f27be-dfb4-4b46-bc21-7d24669ade40",
+      "name": "08A - Split FlytBase Queries",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.material_queries }}"
+            },
+            {
+              "name": "num",
+              "value": "5"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            },
+            {
+              "name": "output",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "id": "344a6ca9-fbee-49d2-9fa2-bb706e9d3856",
+      "name": "09 - Search FlytBase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2848,
+        -192
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "sbIfqjFER25q2Y7b",
+          "name": "SerpAPI account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst errors = [];\nfor (const item of $input.all()) {\n  const r = item.json || {};\n  if (r.error) {\n    errors.push(String((r.error && r.error.message) || r.error));\n    continue;\n  }\n  const q = (r.search_parameters && r.search_parameters.q) || null;\n  const organic = (r.organic_results || []).slice(0, 5);\n  for (const o of organic) {\n    results.push({\n      query: q,\n      title: o.title || null,\n      url: o.link || null,\n      snippet: o.snippet || null,\n      source: o.source || null,\n      date: o.date || null\n    });\n  }\n}\nconst seen = {};\nconst deduped = results.filter(function (x) {\n  if (!x.url || seen[x.url]) return false;\n  seen[x.url] = true;\n  return true;\n});\nreturn [{\n  json: {\n    search_results: deduped,\n    result_count: deduped.length,\n    search_errors: errors,\n    research_status: deduped.length ? 'available' : 'NOT PUBLICLY VERIFIED - no search results returned'\n  }\n}];"
+      },
+      "id": "29f70a73-1ede-4c29-a8b6-33df3098afbb",
+      "name": "09A - Normalize FlytBase Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Lead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output) }}\n\nQualification:\n{{ JSON.stringify($('02 - MEDDIC Qualification').first().json.output) }}\n\nAccount research:\n{{ JSON.stringify($('07 - SQM Research Synthesizer').first().json.output) }}\n\nSearch status: {{ $json.research_status }}\n\nCandidate FlytBase search results:\n{{ JSON.stringify($json.search_results) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are FlytBase's case-study and material matching engine.\n\nRank the candidate FlytBase pages/case studies found in the search results based on:\n1. same company\n2. same industry\n3. same use case\n4. same geography\n5. operational scale\n6. safety context\n7. autonomous drone requirement\n8. referral/social-proof relationship\n\nThe lead names a referrer (see lead.referral). Report referral_connection as TWO SEPARATE facts that must never be merged:\n(A) lead_stated_referral: what the lead's own email says (e.g. 'Lead states he was referred by Anglo American'). Its only source is the inbound email.\n(B) flytbase_relationship_found / flytbase_relationship_evidence / url: whether the search results show FlytBase has worked with that referrer organisation (false if no evidence).\nA FlytBase case study with the referrer proves only an organisation-level relationship. It does NOT verify who referred the lead, that a referral happened, or that anyone at the referrer will make an introduction.\nUnless a search result explicitly names the referring person, set referring_contact = 'NOT PUBLICLY VERIFIED' and referring_contact_verified = false.\nAlways fill caveat, e.g. 'The case study confirms FlytBase has worked with Anglo American; it does not verify the individual referral. Confirm the referring contact with the lead.'\nNever describe (B) as evidence, proof or confirmation of (A).\n\nRules:\n- Only use candidates that appear in the supplied search results. Never invent a case study or URL.\n- Every factual statement must include a URL from the search results.\n- If nothing relevant was found, say so and set primary_case_study fields to NOT PUBLICLY VERIFIED.\n\nOutput format (strict):\n- Return ONE JSON object whose keys are exactly: ranked_candidates, primary_case_study, referral_connection, why_primary_is_best, sources.\n- All five keys must sit at the same level inside the same object. Never put sources (or any key) outside that object, and never split the keys across two objects.\n- Never leave url empty: if no URL exists, write \"NOT PUBLICLY VERIFIED\".\n- No markdown code fences, no commentary before or after the JSON."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "bc6a66eb-784e-4e22-899f-2048d2eeb595",
+      "name": "10 - Case Study Matcher",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3296,
+        -304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "67694efb-2ad7-4c78-a71c-2029944fd9ba",
+      "name": "OpenAI Model - Case Study",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3312,
+        -80
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"ranked_candidates\": [\n    {\n      \"title\": \"text\",\n      \"company\": \"text\",\n      \"url\": \"https://example.org\",\n      \"fit_score\": 85,\n      \"fit_reasons\": [\n        \"same industry\"\n      ]\n    }\n  ],\n  \"primary_case_study\": {\n    \"title\": \"text\",\n    \"url\": \"https://example.org\",\n    \"reason\": \"text\"\n  },\n  \"referral_connection\": {\n    \"referrer\": \"text\",\n    \"lead_stated_referral\": \"text\",\n    \"flytbase_relationship_found\": true,\n    \"flytbase_relationship_evidence\": \"text\",\n    \"url\": \"https://example.org\",\n    \"referring_contact\": \"NOT PUBLICLY VERIFIED\",\n    \"referring_contact_verified\": false,\n    \"caveat\": \"text\"\n  },\n  \"why_primary_is_best\": \"text\",\n  \"sources\": [\n    {\n      \"claim\": \"text\",\n      \"url\": \"https://example.org\"\n    }\n  ]\n}"
+      },
+      "id": "6d466860-62c0-467f-8717-e547bc4fb8bb",
+      "name": "10A - Case Study Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3440,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('01 - Lead Parser').first().json.output || {};\nconst country = lead.country || 'Latin America';\nconst base = 'site:flytbase.com ';\nreturn [{\n  json: {\n    partner_queries: [\n      base + 'partner ' + country,\n      base + 'partner \"' + country + '\" \"System Integrator\"',\n      base + 'partner \"Latin America\"',\n      base + 'partner mining drone ' + country,\n      base + 'partner ' + country + ' UAV'\n    ]\n  }\n}];"
+      },
+      "id": "bcda0606-bf37-442d-a4c0-9017b18ebcf1",
+      "name": "11 - Generate Partner Queries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "partner_queries",
+        "options": {}
+      },
+      "id": "ade6ded5-9e91-40a0-ac83-8595fb628120",
+      "name": "11A - Split Partner Queries",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.partner_queries }}"
+            },
+            {
+              "name": "num",
+              "value": "5"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            },
+            {
+              "name": "output",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "id": "1722e611-06e5-4461-a9ba-41858cd0b93a",
+      "name": "12 - Search Partners",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2848,
+        208
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "sbIfqjFER25q2Y7b",
+          "name": "SerpAPI account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst errors = [];\nfor (const item of $input.all()) {\n  const r = item.json || {};\n  if (r.error) {\n    errors.push(String((r.error && r.error.message) || r.error));\n    continue;\n  }\n  const q = (r.search_parameters && r.search_parameters.q) || null;\n  const organic = (r.organic_results || []).slice(0, 5);\n  for (const o of organic) {\n    results.push({\n      query: q,\n      title: o.title || null,\n      url: o.link || null,\n      snippet: o.snippet || null,\n      source: o.source || null,\n      date: o.date || null\n    });\n  }\n}\nconst seen = {};\nconst deduped = results.filter(function (x) {\n  if (!x.url || seen[x.url]) return false;\n  seen[x.url] = true;\n  return true;\n});\nreturn [{\n  json: {\n    search_results: deduped,\n    result_count: deduped.length,\n    search_errors: errors,\n    research_status: deduped.length ? 'available' : 'NOT PUBLICLY VERIFIED - no search results returned'\n  }\n}];"
+      },
+      "id": "0a61e6e3-bfe1-4646-b57f-6734651347c6",
+      "name": "12A - Normalize Partner Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Lead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output) }}\n\nAccount research:\n{{ JSON.stringify($('07 - SQM Research Synthesizer').first().json.output) }}\n\nSearch status: {{ $json.research_status }}\n\nPartner search evidence:\n{{ JSON.stringify($json.search_results) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are FlytBase's enterprise GTM motion and partner selection engine.\n\nDetermine the recommended motion, one of:\n1. Direct AE engagement\n2. Partner-led\n3. AE-led + partner-supported\n\nEvaluate:\n- in-country / regional coverage\n- mining experience\n- system integration capability\n- local deployment support\n- hardware support\n- enterprise complexity\n- FlytBase partner evidence\n- evidence of current availability\n\nRules:\n- Only name partners that appear in the supplied search evidence, with their URL.\n- Never assume a partner is active without evidence; set availability_verified=false when unclear.\n- If partner evidence is weak, recommend an AE-led motion and list partner verification as a risk.\n- Never infer location, country presence, mining experience, regulatory approvals or capability from a company's NAME. 'Drone Store Chile' being called that is not evidence it operates in Chile.\n- recommended_partner.verified_facts may contain only facts stated in a search result snippet, each with that result's URL (e.g. 'Listed by FlytBase as a Latin America partner').\n- Put everything else (local presence, mining experience, DGAC approvals, 24/7 support, current availability) in unverified_assumptions.\n- Set recommended_partner.status to 'VERIFIED' only if the evidence explicitly shows BOTH in-country presence AND relevant mining/industrial deployment experience. Otherwise use 'CANDIDATE - UNVERIFIED' and give concrete verification_steps (confirm Chile presence, mining references, DGAC certification, SLA).\n- When the status is unverified, word reasoning as 'partner candidate to validate', never 'recommended local partner'.\n\nReturn: recommended_motion, partner_candidates, recommended_partner, partner_type, reasoning, risks, sources. JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "db7eaeef-db99-4bbe-8599-ad02d99f59c6",
+      "name": "13 - Partner/GTM Matcher",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3296,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "fce646df-2320-4681-bf7a-961e41a85b74",
+      "name": "OpenAI Model - Partner",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3312,
+        432
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"recommended_motion\": \"AE-led + partner-supported\",\n  \"partner_candidates\": [\n    {\n      \"name\": \"text\",\n      \"url\": \"https://example.org\",\n      \"location\": \"text\",\n      \"capabilities\": [\n        \"system integration\"\n      ],\n      \"evidence\": \"text\",\n      \"availability_verified\": false\n    }\n  ],\n  \"recommended_partner\": {\n    \"name\": \"text\",\n    \"url\": \"https://example.org\",\n    \"status\": \"CANDIDATE - UNVERIFIED\",\n    \"verified_facts\": [\n      {\n        \"fact\": \"text\",\n        \"url\": \"https://example.org\"\n      }\n    ],\n    \"unverified_assumptions\": [\n      \"text\"\n    ],\n    \"verification_steps\": [\n      \"text\"\n    ]\n  },\n  \"partner_type\": \"text\",\n  \"reasoning\": \"text\",\n  \"risks\": [\n    \"text\"\n  ],\n  \"sources\": [\n    {\n      \"claim\": \"text\",\n      \"url\": \"https://example.org\"\n    }\n  ]\n}"
+      },
+      "id": "8e84a7dc-b1c8-4de8-becf-721d98083e38",
+      "name": "13B - Partner Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3440,
+        432
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "553de13d-14a2-4d75-a3f3-aa94e0aa5124",
+      "name": "13A - Combine Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3648,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Lead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output) }}\n\nMEDDIC:\n{{ JSON.stringify($('02 - MEDDIC Qualification').first().json.output) }}\n\nAccount research:\n{{ JSON.stringify($('07 - SQM Research Synthesizer').first().json.output) }}\n\nCase study:\n{{ JSON.stringify($('10 - Case Study Matcher').first().json.output) }}\n\nGTM:\n{{ JSON.stringify($('13 - Partner/GTM Matcher').first().json.output) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are FlytBase's inbound BDR response-generation engine.\n\nCreate a four-email adaptive sequence.\nEMAIL 1: Acknowledge the inbound request, demonstrate relevance, and ask for a discovery call.\nEMAIL 2: Discover the most important MEDDIC unknowns.\nEMAIL 3: Use relevant FlytBase proof points and propose a business-case/pilot discussion without promising unsupported ROI.\nEMAIL 4: Close the loop or propose a specific next step.\n\nFor each email provide: sequence, subject, body, objective, unknowns_addressed, why_now.\n\nRULES:\n- Use only the verified research supplied. Do not independently invent research.\n- Do not invent numbers.\n- Do not assume the sender is the economic buyer.\n- Match seniority and industry context.\n- Keep emails concise and professional.\n- The sequence must progress logically and not repeat the same CTA.\n- Referral: you may say 'thanks for the referral from Anglo American' because the lead said so. You may cite FlytBase's Anglo American work as a separate proof point. Never imply the case study confirms the referral or who made it.\n- Partners: if GTM recommended_partner.status is not 'VERIFIED', do NOT name the partner to the prospect and do NOT call it 'our recommended local partner'. Say 'a regional deployment partner (to be confirmed)' or leave partners out.\n- Sender: every email is signed exactly as:\nBest regards,\nShubham Singh\nFlytBase\nNever use placeholders such as [Your name], [Name], [Company] or any bracketed token.\n\nAlso return progression_logic. JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "4488ed3d-f1ea-4008-92ec-162fa46c2a5c",
+      "name": "14 - Response Sequence",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3872,
+        0
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "e5c48dff-55e7-4830-b692-5656e1b3147a",
+      "name": "OpenAI Model - Outreach",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3888,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"emails\": [\n    {\n      \"sequence\": 1,\n      \"subject\": \"text\",\n      \"body\": \"text\",\n      \"objective\": \"text\",\n      \"unknowns_addressed\": [\n        \"text\"\n      ],\n      \"why_now\": \"text\"\n    }\n  ],\n  \"progression_logic\": \"text\"\n}"
+      },
+      "id": "79bb698e-eb96-49dc-8c2b-c2855e5a5279",
+      "name": "14A - Email Sequence Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4016,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evidence package:\n\nLead:\n{{ JSON.stringify($('01 - Lead Parser').first().json.output) }}\n\nMEDDIC:\n{{ JSON.stringify($('02 - MEDDIC Qualification').first().json.output) }}\n\nAccount research:\n{{ JSON.stringify($('07 - SQM Research Synthesizer').first().json.output) }}\n\nCase study:\n{{ JSON.stringify($('10 - Case Study Matcher').first().json.output) }}\n\nGTM:\n{{ JSON.stringify($('13 - Partner/GTM Matcher').first().json.output) }}\n\nEmail sequence:\n{{ JSON.stringify($json.output) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Create an actionable AE handoff from the verified workflow data.\n\nInclude: buyer_context, company, role, opportunity, pain, meddic_score, priority, knowns, unknowns, top_3_research_findings (each with source_url), recommended_case_study, referral_connection, gtm_motion, partner_recommendation, suggested_next_step, discovery_questions, risks.\n\nRules:\n- Do not add facts that are not in the evidence package.\n- referral_connection must state separately: (1) the lead says Anglo American referred him (source: inbound email), (2) whether FlytBase has a documented Anglo American relationship (with URL), (3) that the referring contact is NOT PUBLICLY VERIFIED and must be confirmed with the lead.\n- partner_recommendation must include the partner status from GTM. If it is not 'VERIFIED', write 'Partner candidate (unverified): <name> - verify <steps> before involving them', and never call it a confirmed local partner.\n- The AE should understand the opportunity without reading the original email.\n- suggested_next_step should generally be a discovery call focused on inspection baseline, safety exposure, success metrics, stakeholders, decision process and pilot scope. Do NOT present it as an already agreed meeting.\n\nJSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "c549d76d-82ce-4c99-8ca2-ebb85f8a74d5",
+      "name": "15 - AE Handoff",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        4224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"buyer_context\": \"text\",\n  \"company\": \"text\",\n  \"role\": \"text\",\n  \"opportunity\": \"text\",\n  \"pain\": [\n    \"text\"\n  ],\n  \"meddic_score\": 72,\n  \"priority\": \"P1\",\n  \"knowns\": [\n    \"text\"\n  ],\n  \"unknowns\": [\n    \"text\"\n  ],\n  \"top_3_research_findings\": [\n    {\n      \"finding\": \"text\",\n      \"source_url\": \"https://example.org\"\n    }\n  ],\n  \"recommended_case_study\": {\n    \"title\": \"text\",\n    \"url\": \"https://example.org\"\n  },\n  \"referral_connection\": \"text\",\n  \"gtm_motion\": \"text\",\n  \"partner_recommendation\": \"text\",\n  \"suggested_next_step\": \"text\",\n  \"discovery_questions\": [\n    \"text\"\n  ],\n  \"risks\": [\n    \"text\"\n  ]\n}"
+      },
+      "id": "0250195f-09f7-4fc7-b37b-1c493b70ec83",
+      "name": "15A - AE Handoff Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4304,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pkg",
+              "name": "package",
+              "type": "object",
+              "value": "={{ ({ lead: $('01 - Lead Parser').first().json.output, qualification: $('02 - MEDDIC Qualification').first().json.output, account_research: $('07 - SQM Research Synthesizer').first().json.output, research_status: { account: $('06 - Normalize SQM Results').first().json.research_status, flytbase: $('09A - Normalize FlytBase Results').first().json.research_status, partners: $('12A - Normalize Partner Results').first().json.research_status }, case_study_match: $('10 - Case Study Matcher').first().json.output, partner_gtm: $('13 - Partner/GTM Matcher').first().json.output, response_sequence: $('14 - Response Sequence').first().json.output, ae_handoff: $json.output }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "22bf96d1-52ec-4487-b4ad-4ae8d7b86a5b",
+      "name": "16 - Assemble Package",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4576,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=OUTPUT TO VALIDATE:\n{{ $json.package ? JSON.stringify($json.package) : $json.text }}\n\nRAW SEARCH EVIDENCE (what the research was allowed to use):\n{{ JSON.stringify({ account: $('06 - Normalize SQM Results').first().json.search_results, flytbase: $('09A - Normalize FlytBase Results').first().json.search_results, partners: $('12A - Normalize Partner Results').first().json.search_results }) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the final quality-control validator for a BDR automation system.\nReview the supplied output against the raw search evidence.\n\nCheck:\n1. All six stages are present (qualification, account research, response sequence, case study match, partner/GTM, AE handoff).\n2. Research claims have sources.\n3. No unsupported financial number is presented as the lead's budget.\n4. No person is incorrectly labelled economic buyer.\n5. No case study is asserted without evidence.\n6. The referral relationship claim is supported by evidence (or clearly marked unverified). Accept it if the output separates the lead-stated referral from FlytBase's organisation-level relationship and marks the referring contact NOT PUBLICLY VERIFIED. Flag it only if it implies the case study proves the referral.\n7. Partner recommendation is evidence-backed. Accept a partner explicitly labelled 'CANDIDATE - UNVERIFIED' with verification steps and no unsupported locality/capability claims. Flag any partner presented as a confirmed or recommended local partner without evidence, including in emails.\n8. MEDDIC unknowns are preserved.\n9. Emails use research rather than generic claims.\n10. AE handoff is actionable.\n11. Any claim labelled as fact can be traced to a URL in the evidence.\n12. The final recommendation contains caveats where evidence is weak.\n\nReturn status PASS or FAIL, plus unsupported_claims, missing_sources, hard_coded_items, missing_stages, corrections_required, reason.\nDo not rewrite the output. Only validate it. JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "79b12bd1-db9e-4b36-b513-04a6d1e94b20",
+      "name": "17 - Quality Validator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        4800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "8424c2ae-637e-4780-95a1-cd8ad765899a",
+      "name": "OpenAI Model - Validation",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4816,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"status\": \"PASS\",\n  \"unsupported_claims\": [\n    \"text\"\n  ],\n  \"missing_sources\": [\n    \"text\"\n  ],\n  \"hard_coded_items\": [\n    \"text\"\n  ],\n  \"missing_stages\": [\n    \"text\"\n  ],\n  \"corrections_required\": [\n    \"text\"\n  ],\n  \"reason\": \"text\"\n}"
+      },
+      "id": "0054c171-9ffa-4c73-afed-df00f166b90a",
+      "name": "17A - Validator Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4944,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "status-pass",
+              "leftValue": "={{ $json.output.status }}",
+              "rightValue": "PASS",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6f8ec6d8-a786-46a1-a1b7-804179a71f16",
+      "name": "18 - Validation Decision",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5152,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseMaybe(t) {\n  if (!t) return null;\n  if (typeof t === 'object') return t;\n  let s = String(t).trim();\n  s = s.replace(/^\\x60{3}(?:json)?\\s*/i, '').replace(/\\x60{3}\\s*$/, '');\n  try { return JSON.parse(s); } catch (e) { return null; }\n}\nlet pkg = $('16 - Assemble Package').first().json.package || {};\nlet repaired = false;\ntry {\n  if ($('19 - Repair Output').isExecuted) {\n    const p = parseMaybe($('19 - Repair Output').last().json.text);\n    if (p) { pkg = p.package || p; repaired = true; }\n  }\n} catch (e) {}\nconst v = $input.first().json.output || {};\nconst status = String(v.status || 'UNKNOWN').toUpperCase();\nconst finalStatus = status === 'PASS' ? 'PASS' : 'FAIL - NEEDS HUMAN REVIEW';\n\nconst L = [];\nconst list = function (arr) {\n  if (!arr || !arr.length) { L.push('- (none)'); return; }\n  arr.forEach(function (x) {\n    if (x && typeof x === 'object') {\n      const text = x.statement || x.claim || x.finding || x.title || x.name || JSON.stringify(x);\n      const url = x.source_url || x.url || '';\n      const hasSrcField = ('source_url' in x) || ('url' in x);\n      L.push('- ' + text + (url ? ' (' + url + ')' : (hasSrcField ? ' (source: NOT PUBLICLY VERIFIED - no public source found)' : '')));\n    } else { L.push('- ' + x); }\n  });\n};\nconst SENDER = 'Shubham Singh';\nif (pkg.response_sequence && Array.isArray(pkg.response_sequence.emails)) {\n  pkg.response_sequence.emails.forEach(function (em) {\n    if (em && typeof em.body === 'string') em.body = em.body.replace(/\\[(your name|name|sender name|your full name)\\]/gi, SENDER);\n  });\n}\nif (pkg.account_research && typeof pkg.account_research === 'object') {\n  Object.keys(pkg.account_research).forEach(function (sec) {\n    const arr = pkg.account_research[sec];\n    if (Array.isArray(arr)) arr.forEach(function (it) {\n      if (it && typeof it === 'object' && 'source_url' in it && !it.source_url) it.source_url = 'NOT PUBLICLY VERIFIED - no public source found in search results';\n    });\n  });\n}\nconst q = pkg.qualification || {};\nconst r = pkg.account_research || {};\nconst cs = pkg.case_study_match || {};\nconst gtm = pkg.partner_gtm || {};\nconst seq = pkg.response_sequence || {};\nconst ae = pkg.ae_handoff || {};\nconst lead = pkg.lead || {};\n\nL.push('# FLYTBASE INBOUND BDR - LIVE RUN');\nL.push('Lead: ' + (lead.full_name || '') + ' - ' + (lead.job_title || '') + ', ' + (lead.company || ''));\nL.push('');\nL.push('## 1. Qualification');\nL.push('Framework: ' + (q.framework || 'MEDDIC'));\nL.push('Score: ' + (q.score != null ? q.score : 'n/a'));\nL.push('Priority: ' + (q.priority || 'n/a'));\nL.push('### Known');\nconst k = q.known_information || {};\nObject.keys(k).forEach(function (key) {\n  const val = Array.isArray(k[key]) ? k[key].join('; ') : k[key];\n  L.push('- ' + key + ': ' + (val || 'UNKNOWN'));\n});\nL.push('### Unknown'); list(q.unknown_information);\nL.push('### Discovery Questions'); list(q.discovery_questions);\nL.push('');\nL.push('## 2. Account Research');\nL.push('### Organizational Context'); list(r.organizational_context);\nL.push('### Relevant Operations'); list(r.relevant_operations);\nL.push('### Budget Signals'); list(r.budget_signals);\nL.push('### Technology Investment Signals'); list(r.technology_investment_signals);\nL.push('### Strategic Signals'); list(r.recent_strategic_announcements);\nL.push('### Operational Priorities'); list(r.operational_priorities);\nL.push('### Stakeholders'); list(r.relevant_stakeholders);\nL.push('### Implications for FlytBase'); list(r.implications_for_flytbase);\nL.push('### Sources'); list(r.sources);\nL.push('');\nL.push('## 3. Response Sequence');\n(seq.emails || []).forEach(function (e) {\n  L.push('### Email ' + e.sequence + ': ' + e.subject);\n  L.push('Objective: ' + e.objective);\n  L.push('Unknowns addressed: ' + (e.unknowns_addressed || []).join('; '));\n  L.push('Why now: ' + e.why_now);\n  L.push('');\n  L.push(e.body);\n  L.push('');\n});\nL.push('Progression: ' + (seq.progression_logic || ''));\nL.push('');\nL.push('## 4. Case Study / Material Match');\nconst pc = cs.primary_case_study || {};\nL.push('Primary case study: ' + (pc.title || 'n/a') + (pc.url ? ' (' + pc.url + ')' : ''));\nL.push('Why: ' + (cs.why_primary_is_best || pc.reason || ''));\nconst rc = cs.referral_connection || {};\nL.push('### Referral connection (' + (rc.referrer || 'referrer') + ')');\nL.push('- Lead-stated referral (source: inbound email): ' + (rc.lead_stated_referral || 'n/a'));\nL.push('- FlytBase relationship with referrer: ' + ((rc.flytbase_relationship_found !== undefined ? rc.flytbase_relationship_found : rc.found) ? 'DOCUMENTED' : 'NOT FOUND') + ' - ' + (rc.flytbase_relationship_evidence || rc.evidence || '') + (rc.url ? ' (' + rc.url + ')' : ''));\nL.push('- Referring contact: ' + (rc.referring_contact_verified ? (rc.referring_contact || '') : 'NOT PUBLICLY VERIFIED - confirm with the lead'));\nif (rc.caveat) L.push('- Caveat: ' + rc.caveat);\nL.push('### Ranked candidates'); list(cs.ranked_candidates);\nL.push('');\nL.push('## 5. Partner / GTM');\nL.push('Recommended motion: ' + (gtm.recommended_motion || 'n/a'));\nconst rp = gtm.recommended_partner || {};\nL.push('Partner: ' + (rp.name || 'n/a') + ' [' + (rp.status || 'CANDIDATE - UNVERIFIED') + ']' + (rp.url ? ' (' + rp.url + ')' : ''));\nif (rp.verified_facts && rp.verified_facts.length) { L.push('Verified facts:'); rp.verified_facts.forEach(function (v) { L.push('- ' + (v.fact || '') + (v.url ? ' (' + v.url + ')' : '')); }); }\nif (rp.unverified_assumptions && rp.unverified_assumptions.length) { L.push('Not verified:'); rp.unverified_assumptions.forEach(function (v) { L.push('- ' + v); }); }\nif (rp.verification_steps && rp.verification_steps.length) { L.push('Verify before involving partner:'); rp.verification_steps.forEach(function (v) { L.push('- ' + v); }); }\nL.push('Reason: ' + (gtm.reasoning || ''));\nL.push('### Risks'); list(gtm.risks);\nL.push('');\nL.push('## 6. AE Handoff');\nL.push('Buyer: ' + (ae.buyer_context || ''));\nL.push('Opportunity: ' + (ae.opportunity || ''));\nL.push('### Top 3 findings'); list(ae.top_3_research_findings);\nconst rcs = ae.recommended_case_study || {};\nL.push('Recommended material: ' + (rcs.title || '') + (rcs.url ? ' (' + rcs.url + ')' : ''));\nL.push('GTM motion: ' + (ae.gtm_motion || ''));\nL.push('Next step: ' + (ae.suggested_next_step || ''));\nL.push('### Discovery questions'); list(ae.discovery_questions);\nL.push('### Risks'); list(ae.risks);\nL.push('');\nL.push('## 7. Validation');\nL.push('Status: ' + finalStatus + (repaired ? ' (after one repair pass)' : ''));\nL.push('Reason: ' + (v.reason || ''));\nif (finalStatus !== 'PASS') {\n  L.push('### Needs human review');\n  list([].concat(v.unsupported_claims || [], v.missing_sources || [], v.corrections_required || []));\n}\n\nreturn [{ json: { status: finalStatus, repaired: repaired, validation: v, report_markdown: L.join('\\n'), result: pkg } }];"
+      },
+      "id": "1f357d6c-2b0a-4067-a408-17b5f65bd7a5",
+      "name": "20 - Final Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5664,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "not-repaired",
+              "leftValue": "={{ $('19 - Repair Output').isExecuted }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e8c5fb37-f37f-4bf6-8134-e30187cdbaa6",
+      "name": "18A - Repair Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5376,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ORIGINAL OUTPUT:\n{{ JSON.stringify($('16 - Assemble Package').first().json.package) }}\n\nVALIDATION:\n{{ JSON.stringify($json.output) }}\n\nRAW SEARCH EVIDENCE:\n{{ JSON.stringify({ account: $('06 - Normalize SQM Results').first().json.search_results, flytbase: $('09A - Normalize FlytBase Results').first().json.search_results, partners: $('12A - Normalize Partner Results').first().json.search_results }) }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "The BDR workflow failed validation.\nRepair ONLY the issues identified by the validator.\n\nRules:\n- Do not introduce new facts.\n- Do not remove valid evidence.\n- If a fact cannot be supported by the raw search evidence, mark it NOT PUBLICLY VERIFIED or remove it.\n- Preserve the exact top-level structure: lead, qualification, account_research, research_status, case_study_match, partner_gtm, response_sequence, ae_handoff.\n\nReturn the complete corrected result as a single JSON object only, with no markdown fences and no commentary."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "87196622-bcf6-43a2-a1d7-8d456a53832e",
+      "name": "19 - Repair Output",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        5600,
+        96
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "00 - INPUT - Trigger": {
+      "main": [
+        [
+          {
+            "node": "00 - INPUT - Raw Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "00 - INPUT - Raw Lead": {
+      "main": [
+        [
+          {
+            "node": "01 - Lead Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01 - Lead Parser": {
+      "main": [
+        [
+          {
+            "node": "02 - MEDDIC Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "01 - Lead Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "02 - MEDDIC Qualification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01A - Lead Parser Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "01 - Lead Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - MEDDIC Qualification": {
+      "main": [
+        [
+          {
+            "node": "03 - Generate Research Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02A - MEDDIC Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "02 - MEDDIC Qualification",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Generate Research Queries": {
+      "main": [
+        [
+          {
+            "node": "04 - Split Research Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Split Research Queries": {
+      "main": [
+        [
+          {
+            "node": "05 - Search SQM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Search SQM": {
+      "main": [
+        [
+          {
+            "node": "06 - Normalize SQM Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Normalize SQM Results": {
+      "main": [
+        [
+          {
+            "node": "07 - SQM Research Synthesizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 - SQM Research Synthesizer": {
+      "main": [
+        [
+          {
+            "node": "08 - Generate FlytBase Queries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "11 - Generate Partner Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Research": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "07 - SQM Research Synthesizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07A - Research Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "07 - SQM Research Synthesizer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 - Generate FlytBase Queries": {
+      "main": [
+        [
+          {
+            "node": "08A - Split FlytBase Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08A - Split FlytBase Queries": {
+      "main": [
+        [
+          {
+            "node": "09 - Search FlytBase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Search FlytBase": {
+      "main": [
+        [
+          {
+            "node": "09A - Normalize FlytBase Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09A - Normalize FlytBase Results": {
+      "main": [
+        [
+          {
+            "node": "10 - Case Study Matcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Case Study Matcher": {
+      "main": [
+        [
+          {
+            "node": "13A - Combine Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Case Study": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "10 - Case Study Matcher",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10A - Case Study Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "10 - Case Study Matcher",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Generate Partner Queries": {
+      "main": [
+        [
+          {
+            "node": "11A - Split Partner Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11A - Split Partner Queries": {
+      "main": [
+        [
+          {
+            "node": "12 - Search Partners",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Search Partners": {
+      "main": [
+        [
+          {
+            "node": "12A - Normalize Partner Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12A - Normalize Partner Results": {
+      "main": [
+        [
+          {
+            "node": "13 - Partner/GTM Matcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Partner/GTM Matcher": {
+      "main": [
+        [
+          {
+            "node": "13A - Combine Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Partner": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "13 - Partner/GTM Matcher",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13B - Partner Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "13 - Partner/GTM Matcher",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13A - Combine Branches": {
+      "main": [
+        [
+          {
+            "node": "14 - Response Sequence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Response Sequence": {
+      "main": [
+        [
+          {
+            "node": "15 - AE Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Outreach": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "14 - Response Sequence",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "15 - AE Handoff",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14A - Email Sequence Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "14 - Response Sequence",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - AE Handoff": {
+      "main": [
+        [
+          {
+            "node": "16 - Assemble Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15A - AE Handoff Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "15 - AE Handoff",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Assemble Package": {
+      "main": [
+        [
+          {
+            "node": "17 - Quality Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Quality Validator": {
+      "main": [
+        [
+          {
+            "node": "18 - Validation Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model - Validation": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "17 - Quality Validator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "19 - Repair Output",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17A - Validator Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "17 - Quality Validator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 - Validation Decision": {
+      "main": [
+        [
+          {
+            "node": "20 - Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "18A - Repair Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18A - Repair Allowed?": {
+      "main": [
+        [
+          {
+            "node": "19 - Repair Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "20 - Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19 - Repair Output": {
+      "main": [
+        [
+          {
+            "node": "17 - Quality Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "30066651-28d4-47ff-82c7-cd64cb6b6540",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "812a3bffc779a3ead948e269da578ed8db0652e06011e0281d4960b2b9d6363e"
+  },
+  "nodeGroups": [
+    {
+      "id": "51c9cc07-24f1-418c-acc5-85d30fcf3b09",
+      "name": "Qualify inbound lead",
+      "nodeIds": [
+        "120f5a99-b4e2-4923-afac-9178b2b2dc75",
+        "b0870ee5-30a3-4770-aae8-e5518dd09910",
+        "e0932f56-510e-4daf-8ce3-1d0662deb183",
+        "fbc32032-30a6-41c2-b656-c5d5773427fa",
+        "21061a32-8328-490a-accc-8e1a50d30a01",
+        "7893aef0-1800-4357-8c0e-a98e3dd5b5ef"
+      ],
+      "description": "Turns the raw inbound email into a structured lead, then scores it with MEDDIC and separates knowns from unknowns"
+    },
+    {
+      "id": "67ee3663-cb0c-424e-8f70-c0871b7c206e",
+      "name": "Research the account",
+      "nodeIds": [
+        "1042728c-89a2-4557-ab1f-94bc4e437d57",
+        "8afa04da-9386-4b31-b9c0-7b6308fa806a",
+        "9717074c-5c7e-44a6-b6fc-cc054682046e",
+        "8f57e77b-43c0-4936-979c-363ee0f8f538",
+        "8d96a56d-da76-4557-a59d-9ea6449254cb",
+        "33d4e025-fa73-4131-94e0-6adee469e523",
+        "4bcc9661-98ce-4042-8ca4-32efb14b49ce"
+      ],
+      "description": "Runs targeted public web searches on the company and writes an evidence-backed brief where every claim cites a URL"
+    },
+    {
+      "id": "d7f0a042-cf65-4668-a732-073f4edc4b4e",
+      "name": "Match proof points",
+      "nodeIds": [
+        "bda078dd-fca7-43c1-8451-a02976a4bce4",
+        "dd2f27be-dfb4-4b46-bc21-7d24669ade40",
+        "344a6ca9-fbee-49d2-9fa2-bb706e9d3856",
+        "29f70a73-1ede-4c29-a8b6-33df3098afbb",
+        "bc6a66eb-784e-4e22-899f-2048d2eeb595",
+        "67694efb-2ad7-4c78-a71c-2029944fd9ba",
+        "6d466860-62c0-467f-8717-e547bc4fb8bb"
+      ],
+      "description": "Searches FlytBase's own site, ranks the best-fit case study and checks for evidence of the referrer relationship"
+    },
+    {
+      "id": "ee421a14-7f9e-4461-a890-1dc363ea1bbe",
+      "name": "Pick go-to-market route",
+      "nodeIds": [
+        "bcda0606-bf37-442d-a4c0-9017b18ebcf1",
+        "ade6ded5-9e91-40a0-ac83-8595fb628120",
+        "1722e611-06e5-4461-a9ba-41858cd0b93a",
+        "0a61e6e3-bfe1-4646-b57f-6734651347c6",
+        "db7eaeef-db99-4bbe-8599-ad02d99f59c6",
+        "fce646df-2320-4681-bf7a-961e41a85b74",
+        "8e84a7dc-b1c8-4de8-becf-721d98083e38"
+      ],
+      "description": "Looks for in-region FlytBase partners and decides between direct, partner-led or AE-led with partner support"
+    },
+    {
+      "id": "b362a7d3-b68f-4c55-9a18-3674974b77eb",
+      "name": "Draft outreach and handoff",
+      "nodeIds": [
+        "553de13d-14a2-4d75-a3f3-aa94e0aa5124",
+        "4488ed3d-f1ea-4008-92ec-162fa46c2a5c",
+        "c549d76d-82ce-4c99-8ca2-ebb85f8a74d5",
+        "e5c48dff-55e7-4830-b692-5656e1b3147a",
+        "79bb698e-eb96-49dc-8c2b-c2855e5a5279",
+        "0250195f-09f7-4fc7-b37b-1c493b70ec83"
+      ],
+      "description": "Writes a four-email sequence aimed at the MEDDIC gaps, then a CRM-ready summary the AE can act on"
+    },
+    {
+      "id": "a1be80b5-aa1b-4775-91bd-d43aec50a8b7",
+      "name": "Validate final report",
+      "nodeIds": [
+        "22bf96d1-52ec-4487-b4ad-4ae8d7b86a5b",
+        "79b12bd1-db9e-4b36-b513-04a6d1e94b20",
+        "6f8ec6d8-a786-46a1-a1b7-804179a71f16",
+        "e8c5fb37-f37f-4bf6-8134-e30187cdbaa6",
+        "87196622-bcf6-43a2-a1d7-8d456a53832e",
+        "1f357d6c-2b0a-4067-a408-17b5f65bd7a5",
+        "8424c2ae-637e-4780-95a1-cd8ad765899a",
+        "0054c171-9ffa-4c73-afed-df00f166b90a"
+      ],
+      "description": "Bundles all stages, checks every claim against the search evidence, allows one repair pass, then outputs a PASS/FAIL report"
+    }
+  ],
+  "id": "LkRcrQRqStEzfXDC",
+  "tags": []
+}
